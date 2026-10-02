@@ -1,0 +1,21 @@
+{
+  "name": "la-peor-de-mis-canas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "El juego de preguntas para beber con amigos",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "preview:web": "pnpm --filter web preview",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "^18.2.0"
+    }
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0"
+  }
+}
+
