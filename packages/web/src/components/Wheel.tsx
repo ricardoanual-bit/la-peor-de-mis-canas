@@ -23,6 +23,7 @@ export default function Wheel({ players, isSpinning, onSpinComplete }: WheelProp
 
 		const spinPlayers = playersRef.current;
 		if (spinPlayers.length === 0) return;
+		const wheelOptions = [...spinPlayers, '¡Todos toman!'];
 
 		const spins = Math.floor(Math.random() * 5) + 5;
 		const stopAngle = Math.floor(Math.random() * 360);
@@ -46,9 +47,9 @@ export default function Wheel({ players, isSpinning, onSpinComplete }: WheelProp
 			}
 
 			const normalizedAngle = (270 - currentRotation + 360) % 360;
-			const segmentAngle = 360 / spinPlayers.length;
+			const segmentAngle = 360 / wheelOptions.length;
 			const winnerIndex = Math.floor(normalizedAngle / segmentAngle);
-			onSpinCompleteRef.current(spinPlayers[winnerIndex]);
+			onSpinCompleteRef.current(wheelOptions[winnerIndex]);
 		};
 
 		animationFrame = requestAnimationFrame(animate);
@@ -63,7 +64,6 @@ export default function Wheel({ players, isSpinning, onSpinComplete }: WheelProp
 		const centerX = canvas.width / 2;
 		const centerY = canvas.height / 2;
 		const radius = 150;
-		const segmentAngle = (2 * Math.PI) / players.length;
 		const colors = [
 			'#FF6B6B', '#FFA500', '#FFD93D', '#6BCB77', '#4D96FF',
 			'#9D84B7', '#FF6B9D', '#C44569', '#FFA502', '#1B9CFC',
@@ -79,7 +79,10 @@ export default function Wheel({ players, isSpinning, onSpinComplete }: WheelProp
 			return;
 		}
 
-		players.forEach((player, index) => {
+		const wheelOptions = [...players, '¡Todos toman!'];
+		const segmentAngle = (2 * Math.PI) / wheelOptions.length;
+
+		wheelOptions.forEach((player, index) => {
 			const startAngle = index * segmentAngle;
 			const endAngle = (index + 1) * segmentAngle;
 
@@ -120,7 +123,7 @@ export default function Wheel({ players, isSpinning, onSpinComplete }: WheelProp
 					ref={canvasRef}
 					width={400}
 					height={400}
-					aria-label={`Ruleta con ${players.length} jugadores`}
+					aria-label={`Ruleta con ${players.length} jugadores y la opción ¡Todos toman!`}
 					className="h-full w-full drop-shadow-2xl"
 					style={{ transform: `rotate(${rotation}deg)` }}
 				/>
