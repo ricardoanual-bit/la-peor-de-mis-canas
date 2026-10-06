@@ -84,7 +84,7 @@ export default function CreateGameScreen() {
 								{players.length} participante{players.length !== 1 ? 's' : ''}
 							</p>
 							<div className="grid grid-cols-2 gap-2">
-								{players.map((player, index) => (
+									{players.map((player, index) => (
 									<div
 										key={`${player}-${index}`}
 										className="bg-gradient-to-r from-orange-100 to-red-100 rounded-lg p-3 flex justify-between items-center"
@@ -92,7 +92,7 @@ export default function CreateGameScreen() {
 										<span className="font-semibold text-gray-800">{player}</span>
 										<button
 											type="button"
-											onClick={() => removePlayer(index)}
+												onClick={() => removePlayer(player)}
 											aria-label={`Eliminar a ${player}`}
 											className="text-red-600 hover:text-red-800 transition"
 										>

@@ -3,29 +3,52 @@ import { useNavigate } from 'react-router-dom';
 import Wheel from '../components/Wheel';
 import Question from '../components/Question';
 import { useGameStore } from '../Store/gameStore';
+import { CATEGORIES, QUESTIONS, type Category } from '../questions';
 
-const questions = [
-	{ q: '¿Cuál es la capital de Francia?', a: 'París' },
-	{ q: '¿Cuántos continentes hay?', a: 'Siete' },
-	{ q: '¿En qué año cayó el Muro de Berlín?', a: '1989' },
-	{ q: '¿Cuál es el planeta más grande del sistema solar?', a: 'Júpiter' },
-	{ q: '¿Quién pintó la Mona Lisa?', a: 'Leonardo da Vinci' },
-	{ q: '¿Cuál es el río más largo del mundo?', a: 'El Nilo' },
-	{ q: '¿En qué país se originó el fútbol moderno?', a: 'Inglaterra' },
-	{ q: '¿Cuántos años tiene la Tierra aproximadamente?', a: '4.5 mil millones' },
-];
+interface SelectedQuestion {
+	q: string;
+	a: string;
+	id: string;
+}
+
+const getRandomQuestion = (
+	category: Category,
+	hasUsedQuestion: (questionId: string) => boolean,
+	resetUsedQuestions: () => void,
+): SelectedQuestion => {
+	const categoryQuestions = QUESTIONS[category].map((question, index) => ({
+		...question,
+		id: `${category}-${index}`,
+	}));
+	let availableQuestions = categoryQuestions.filter(
+		(question) => !hasUsedQuestion(question.id),
+	);
+
+	if (availableQuestions.length === 0) {
+		resetUsedQuestions();
+		availableQuestions = categoryQuestions;
+	}
+
+	return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+};
 
 export default function GameScreen() {
 	const navigate = useNavigate();
 	const players = useGameStore((state) => state.players);
 	const gameName = useGameStore((state) => state.gameName);
 	const clearPlayers = useGameStore((state) => state.clearPlayers);
+	const selectedCategory = useGameStore((state) => state.selectedCategory);
+	const markQuestionAsUsed = useGameStore((state) => state.markQuestionAsUsed);
+	const hasUsedQuestion = useGameStore((state) => state.hasUsedQuestion);
+	const resetUsedQuestions = useGameStore((state) => state.resetUsedQuestions);
+	const setSelectedCategory = useGameStore((state) => state.setSelectedCategory);
 	const [spinning, setSpinning] = useState(false);
 	const [currentPlayer, setCurrentPlayer] = useState(0);
 	const [loser, setLoser] = useState<string | null>(null);
 	const [round, setRound] = useState(1);
-	const [mode, setMode] = useState<'choice' | 'question' | 'wheel'>('choice');
-	const [currentQuestion, setCurrentQuestion] = useState(questions[0]);
+	const [mode, setMode] = useState<'choice' | 'categories' | 'question' | 'wheel' | 'result'>('choice');
+	const [currentQuestion, setCurrentQuestion] = useState<SelectedQuestion | null>(null);
+	const [resultMessage, setResultMessage] = useState('');
 	const nextTurnTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => () => {
@@ -33,17 +56,19 @@ export default function GameScreen() {
 	}, []);
 
 	const handleTerminar = () => {
+		if (nextTurnTimeout.current) clearTimeout(nextTurnTimeout.current);
 		clearPlayers();
 		navigate('/');
 	};
 
-	const handleChooseQuestion = () => {
-		setCurrentQuestion(questions[Math.floor(Math.random() * questions.length)]);
-		setMode('question');
-	};
+	const handleChooseQuestion = () => setMode('categories');
 
-	const handleChooseWheel = () => {
-		setMode('wheel');
+	const handleSelectCategory = (category: Category) => {
+		const question = getRandomQuestion(category, hasUsedQuestion, resetUsedQuestions);
+		setCurrentQuestion(question);
+		markQuestionAsUsed(question.id);
+		setSelectedCategory(category);
+		setMode('question');
 	};
 
 	const handleNextTurn = () => {
@@ -51,6 +76,22 @@ export default function GameScreen() {
 		setRound((currentRound) => currentRound + 1);
 		setMode('choice');
 		setLoser(null);
+		setCurrentQuestion(null);
+		setResultMessage('');
+	};
+
+	const handleAnswerCorrect = () => {
+		setResultMessage('acertaste');
+		setMode('result');
+	};
+
+	const handleAnswerWrong = () => {
+		setResultMessage('fallaste');
+		setMode('result');
+	};
+
+	const handleChooseWheel = () => {
+		setMode('wheel');
 	};
 
 	const handleSpinComplete = (winner: string) => {
@@ -128,12 +169,57 @@ export default function GameScreen() {
 					</div>
 				)}
 
-				{mode === 'question' && (
+				{mode === 'categories' && (
+					<div className="space-y-4 max-w-2xl w-full">
+						<div className="text-white text-center mb-4">
+							<p className="text-xl font-bold">Elige una categoría:</p>
+						</div>
+						<div className="grid grid-cols-2 gap-3">
+							{CATEGORIES.map((category) => (
+								<button
+									key={category.key}
+									type="button"
+									onClick={() => handleSelectCategory(category.key)}
+									className="bg-white hover:bg-gray-100 text-black font-bold py-4 px-3 rounded-lg transition transform hover:scale-105 shadow-lg text-center"
+								>
+									<p className="text-2xl mb-1">{category.emoji}</p>
+									<p className="text-sm">{category.label}</p>
+								</button>
+							))}
+						</div>
+					</div>
+				)}
+
+				{mode === 'question' && currentQuestion && selectedCategory && (
 					<div className="space-y-6 w-full flex flex-col items-center">
-						<Question question={currentQuestion.q} answer={currentQuestion.a} />
+						<Question
+							question={currentQuestion.q}
+							answer={currentQuestion.a}
+							category={CATEGORIES.find(({ key }) => key === selectedCategory)?.label ?? selectedCategory}
+							onAnswerCorrect={handleAnswerCorrect}
+							onAnswerWrong={handleAnswerWrong}
+						/>
+					</div>
+				)}
+
+				{mode === 'result' && (
+					<div className="space-y-6 flex flex-col items-center max-w-md w-full">
+						{resultMessage === 'acertaste' ? (
+							<div className="bg-green-400 border-4 border-green-600 rounded-lg p-8 text-center w-full animate-bounce">
+								<p className="text-white font-black text-4xl mb-3">¡¡¡ACERTASTE!!!</p>
+								<p className="text-white font-black text-2xl">👥 TODOS MENOS TÚ</p>
+								<p className="text-white font-black text-3xl mt-2">¡¡¡TOMAN!!!</p>
+							</div>
+						) : (
+							<div className="bg-red-400 border-4 border-red-600 rounded-lg p-8 text-center w-full animate-bounce">
+								<p className="text-white font-black text-4xl mb-3">¡¡¡FALLASTE!!!</p>
+								<p className="text-white font-black text-3xl">¡¡¡TÚ TOMAS!!!</p>
+							</div>
+						)}
 						<button
+							type="button"
 							onClick={handleNextTurn}
-							className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition"
+							className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition text-lg"
 						>
 							Siguiente turno →
 						</button>
