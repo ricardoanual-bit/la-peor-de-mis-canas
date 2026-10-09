@@ -1,38 +1,43 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import LandingScreen from './screens/LandingScreen';
+import LoginScreen from './screens/LoginScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import CreateGameScreen from './screens/CreateGameScreen';
 import GameScreen from './screens/GameScreen';
+import AdminPanel from './screens/AdminPanel';
 
-function App() {
+function LoginRoute({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const navigate = useNavigate();
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <LoginScreen mode="login" onBack={() => navigate('/')} />;
+}
+
+export default function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🍻</div>
-          <p className="text-xl text-gray-600">Cargando...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600">
+        <p className="text-white text-2xl font-bold">Cargando...</p>
       </div>
     );
-  }
-
-  if (!user) {
-    return <LandingScreen />;
   }
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<DashboardScreen />} />
-        <Route path="/create-game" element={<CreateGameScreen />} />
-        <Route path="/game" element={<GameScreen />} />
+        <Route path="/" element={user ? <DashboardScreen /> : <LandingScreen />} />
+        <Route path="/login" element={<LoginRoute isAuthenticated={Boolean(user)} />} />
+        <Route path="/create-game" element={user ? <CreateGameScreen /> : <Navigate to="/login" replace />} />
+        <Route path="/game" element={user ? <GameScreen /> : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={user ? <AdminPanel /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
-
-export default App;

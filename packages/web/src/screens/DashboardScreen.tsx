@@ -18,12 +18,22 @@ export default function DashboardScreen() {
 						<h1 className="text-2xl font-bold">La peor de mis cañas 🍻</h1>
 						<p className="text-orange-100">Bienvenido, {user?.username}</p>
 					</div>
-					<button
-						onClick={handleSignOut}
-						className="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg flex items-center gap-2"
-					>
-						<LogOut size={18} /> Salir
-					</button>
+					<div className="flex items-center gap-2">
+						{user?.email?.toLowerCase() === 'ricardo@test.com' && (
+							<button
+								onClick={() => navigate('/admin')}
+								className="bg-black/30 hover:bg-black/40 px-4 py-2 rounded-lg font-semibold"
+							>
+								Administrar usuarios
+							</button>
+						)}
+						<button
+							onClick={handleSignOut}
+							className="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg flex items-center gap-2"
+						>
+							<LogOut size={18} /> Salir
+						</button>
+					</div>
 				</div>
 			</div>
 

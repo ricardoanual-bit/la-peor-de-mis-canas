@@ -30,3 +30,17 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Admin user management
+
+The `/admin` page calls the `admin-users` Supabase Edge Function for user listing,
+creation, and deletion. Deploy it with the Supabase CLI:
+
+```sh
+supabase functions deploy admin-users
+supabase secrets set ADMIN_EMAIL=ricardo@test.com
+```
+
+The function also needs the project's `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
+`SUPABASE_SERVICE_ROLE_KEY` environment variables. Keep the service-role key on the
+server only; do not add it to the web app's `VITE_*` environment variables.
