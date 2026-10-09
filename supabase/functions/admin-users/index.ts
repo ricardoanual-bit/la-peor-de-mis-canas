@@ -65,11 +65,14 @@ Deno.serve(async (request: Request) => {
 			if (
 				typeof body.email !== 'string'
 				|| typeof body.username !== 'string'
+				|| typeof body.password !== 'string'
 				|| !body.email.trim()
 				|| !body.username.trim()
+				|| body.password.length < 8
+				|| body.password.length > 72
 				|| (body.avatar_url !== null && typeof body.avatar_url !== 'string')
 			) {
-				return jsonResponse({ error: 'Email y username son requeridos' }, 400);
+				return jsonResponse({ error: 'Email, username y contraseña son requeridos; la contraseña debe tener entre 8 y 72 caracteres' }, 400);
 			}
 
 			const email = body.email.trim();
@@ -88,7 +91,7 @@ Deno.serve(async (request: Request) => {
 
 			const { data: createdAuth, error: createAuthError } = await adminClient.auth.admin.createUser({
 				email,
-				password: crypto.randomUUID(),
+				password: body.password,
 				email_confirm: true,
 			});
 			if (createAuthError) throw createAuthError;

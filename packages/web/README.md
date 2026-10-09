@@ -34,7 +34,8 @@ See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rule
 ## Admin user management
 
 The `/admin` page calls the `admin-users` Supabase Edge Function for user listing,
-creation, and deletion. Deploy it with the Supabase CLI:
+creation, and deletion. New users receive a generated temporary password that is
+shown to the administrator once after creation. Deploy the function with the Supabase CLI:
 
 ```sh
 supabase functions deploy admin-users
